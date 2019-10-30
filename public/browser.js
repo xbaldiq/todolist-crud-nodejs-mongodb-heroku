@@ -1,4 +1,15 @@
-function itemTemplate(item){
+
+//mengiterasi setiap hasil query database dan masing" sebagai passing parameter
+let ourHTML = items.map((item) => {
+    return itemTemplate(item);
+}).join(''); //join array tanpa adanya separator (karena defaultnya ',')
+
+// Initial page load render
+// grap id dari UL, settings format, dan populate UL dengan template HTML
+document.getElementById("item-list").insertAdjacentHTML("beforeend", ourHTML);
+
+//memasukkan data dynamic dari database ke template html
+function itemTemplate(item) {
     return `<li class="list-group-item list-group-item-action d-flex align-items-center justify-content-between">
     <span class="item-text">${item.text}</span>
     <div>
@@ -8,40 +19,40 @@ function itemTemplate(item){
   </li>`
 }
 
-// Initial page load redner
-// grap id dari UL, settings format, dan populate UL
-let ourHTML = items.map( (item)=>{
-    return itemTemplate(item);
-}).join('');
-// let ourHTML = 'hello';
-document.getElementById("item-list").insertAdjacentHTML("beforeend",ourHTML)
-
-//Create feature
+//insert data
+//grab id pada input field
 let createField = document.getElementById("create-field");
-document.getElementById("create-form").addEventListener("submit", (e) =>{
+//grab id pada form dan menambahkan listener
+document.getElementById("create-form").addEventListener("submit", (e) => {
     e.preventDefault()
-    axios.post('/create-item', {text: createField.value}).then((response)=>{ 
-        //mejalankan fungsi itemTemplate setelah mendapatkan feedback setelah insert
-        document.getElementById("item-list").insertAdjacentHTML("beforeend", itemTemplate(response.data))
-        createField.value = "";
-        createField.focus();
-   }).catch(()=>{
-       console.log("please check your connection");
-   })
+    if (createField.value) {
+        axios.post('/create-item', { text: createField.value }).then((response) => {
+            //mejalankan fungsi itemTemplate setelah mendapatkan feedback setelah insert
+            document.getElementById("item-list").insertAdjacentHTML("beforeend", itemTemplate(response.data))
+            createField.value = "";
+            createField.focus();
+        }).catch(() => {
+            console.log("please check your connection");
+        })
+    }
+    else{
+        
+    }
 })
 
+//inisialisasi event listener pada tombol delete dan edit
 document.addEventListener("click", (e) => {
     //Delete feature
-    if (e.target.classList.contains("delete-me")){
-        if(confirm("Are you sure?")){
-            axios.post('/delete-item', {id: e.target.getAttribute("data-id")}).then(()=>{
-                 e.target.parentElement.parentElement.remove();
-            }).catch(()=>{
+    if (e.target.classList.contains("delete-me")) {
+        if (confirm("Are you sure?")) {
+            axios.post('/delete-item', { id: e.target.getAttribute("data-id") }).then(() => {
+                e.target.parentElement.parentElement.remove();
+            }).catch(() => {
                 console.log("please check your connection");
             })
         }
     }
-    
+
     //Update feature
     if (e.target.classList.contains("edit-me")) {
         let userInput = prompt("Masukkan text yang anda inginkan", e.target.parentElement.parentElement.querySelector(".item-text").innerHTML)

@@ -11,10 +11,15 @@ if (port == null || port == "") {
   port = 3000
 }
 
-app.use(express.static('public'));//content pada folder menjadi available untuk diakses root server
+app.use(express.static('public'));//content pada folder public menjadi available untuk diakses root server
+app.use(express.json())
+app.use(express.urlencoded({ extended: false })); //boilerplate to make it to easier to acess body object
+app.use(passwordProtected) //express always using password, before executing command
 
+// string autentikasi mongodb yang berisi user, pass, namadb
 let connectionMongo = 'mongodb+srv://root:GmtXRlZrcnOJdeo5@cluster0-wrori.mongodb.net/todoApp?retryWrites=true&w=majority'
 
+// connecting mongodb
 mongodb.connect(connectionMongo, { useNewUrlParse: true }, (error, client) => {
   db = client.db();
   app.listen(port, err => {
@@ -23,12 +28,9 @@ mongodb.connect(connectionMongo, { useNewUrlParse: true }, (error, client) => {
   });
 });
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: false })); //boilerplate to make it to easier to acess body object
-
 function passwordProtected(req, res, next) {
   res.set('WWW-Authenticate', 'Basic realm="Simple Todo App"')
-  console.log(req.headers.authorization)
+  // console.log(req.headers.authorization)
   if (req.headers.authorization == "Basic dDMyOnplbmlzbGV2") {
     //melakukan fungsi selanjunya pada app.get
     next();
@@ -37,11 +39,6 @@ function passwordProtected(req, res, next) {
   }
 }
 
-//express always use url with password 
-app.use(passwordProtected)
-
-//add password authentication
-//app get bisa menjalankan multiple functionm, ie: password protecion
 app.get('/', (req, res) => {
   db.collection('items').find().toArray((err, items) => {
     res.send(`<!DOCTYPE html>
@@ -55,20 +52,20 @@ app.get('/', (req, res) => {
     <body>
       <div class="container">
         <h1 class="display-4 text-center py-1">To-Do App</h1>
-        
         <div class="jumbotron p-3 shadow-sm">
+
           <form id="create-form" action='/create-item' method="POST">
             <div class="d-flex align-items-center">
-              <input id="create-field" name="inputan" autofocus autocomplete="off" class="form-control mr-3" type="text" style="flex: 1;">
+              <input id="create-field" name="inputan" placeholder="Masukkan todo disini.." autofocus autocomplete="off" class="form-control mr-3" type="text" style="flex: 1;">
               <button class="btn btn-primary">Add New Item</button>
             </div>
           </form> 
+
         </div>
         
         <ul id="item-list" class="list-group pb-5">
 
         </ul>
-        
       </div>
       
     <script> let items = ${JSON.stringify(items)} </script>
